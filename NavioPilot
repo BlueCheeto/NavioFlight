@@ -1,0 +1,105 @@
+import time
+import math
+import spidev
+import argparse 
+import sys
+#import navio.mpu9250
+#import navio.util
+
+#navio.util.check_apm()
+#imu.initialize()
+#time.sleep(1)
+
+def makeTri(a, b):
+  tri = [0,0,0]
+  tri[0] = abs(b[0] - a[0])
+  tri[1] = abs(b[1] - a[1])
+  tri[2] = (tri[0]**2 + tri[1]**2)**0.5
+  return tri
+
+class Flight():
+  #lon = 0.0
+  #lat = 0.0
+  error = 0.0
+  turn = " "
+  mag = 0.0
+  t = [-121.5, 36]
+  a = [-117.6, 24.1]
+  b = [-119.2, 26.3]  
+  #m9a, m9g, m9m = imu.getMotion9()
+
+  #Use radius of Earth and theta between positions 'a' and 'b' to find arc length, or travel distance during sample duration
+  def getArc(theta):
+    return r_earth * theta #Theta must be in radians    
+  
+  def checkSafe(self):
+    #time.sleep(10)
+    i = 0
+    while (i < 10):
+      time.sleep(0.2)
+      m9a, m9g, m9m = imu.getMotion9()
+      h += 180*math.atan(m9m[1]/m9m[0])/math.pi
+      t += math.tan((self.b[1]-self.a[1])/(self.b[0]-self.a[0]))
+      ax += abs(m9a[0])
+      ay += abs(m9a[1])
+      i += 1
+
+    print 'h: ', h, ' t: ', t
+    
+    if (abs(h-t) < 300*math.pi/180):
+      if (ax < 10 and ay < 10):
+        print "Payload is safe to manuver"
+        return True
+      else:
+        print "There is currently too much turbulence to make an accurate manuver"
+        return False
+    else:
+      print "Payload is being pushed off course by wind, wait until less turbulence to make manuver"
+      return False
+    
+
+
+  def error(self):
+    refTri = makeTri(self.a, self.b)
+    targTri = makeTri(self.b, self.t)
+    refTheta = math.acos(refTri[0]/refTri[2])
+    targTheta = math.acos(targTri[0]/targTri[2])
+    self.error = abs(refTheta - targTheta)
+    print "Angle of adjustment: {}".format(self.error*180/math.pi)
+    #return self.error*180/math.pi
+
+  def turn(self):
+    slope = (self.b[1]-self.a[1])/(self.b[0]-self.a[0])
+    #print slope
+    x_val = self.t[0]-self.b[0]
+    #print x_val
+    y_val = slope * x_val + self.b[1]
+    #print y_val
+    #print self.t[1]
+    if ((self.b[0] - self.a[0]) > 0):
+      if (y_val - self.t[1] < 0):
+        self.turn = "left"
+      else:
+        self.turn = "right"
+    else:
+      if (y_val - self.t[1] < 0):
+        self.turn = "right"
+      else:
+        self.turn = "left"
+    print "Preparing to turn " + self.turn
+
+r_earth = 1.0
+p = Flight()
+
+def custom():
+  #custom = raw_input("Would you like to enter custom values for positions 'a', 'b', and 't'? (y/n)")
+  #if (custom == 'y'):
+    ax = float(raw_input('Reference position longitude: '))
+    ay = float(raw_input('Reference position latitude: '))
+    bx = float(raw_input('Current position longitude: '))
+    by = float(raw_input('Current position latitude: '))
+    tx = float(raw_input('Target position longitude: '))
+    ty = float(raw_input('Target position latitude: '))
+    p.a = [ax, ay]
+    p.b = [bx, by]
+    p.t = [tx, ty]
