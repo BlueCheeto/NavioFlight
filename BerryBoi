@@ -3,9 +3,6 @@ import time
 import inspect
 from gps import *
 
-gpsd = gps(mode=WATCH_ENABLE|WATCH_NEWSTYLE)
-x = False
-
 def makeTri(a, b):
   tri = [0,0,0]
   tri[0] = abs(b[0] - a[0])
@@ -14,6 +11,7 @@ def makeTri(a, b):
   return tri 
 
 class Flight():
+  gpsd = gps(mode=WATCH_ENABLE|WATCH_NEWSTYLE)
   GPStime = 0.0
   lat = 0.0
   lon = 0.0
@@ -28,9 +26,10 @@ class Flight():
   
   def getData(self):
     countyBoi = 0
+    x = False
     try:
       while (x == False):
-        report = gpsd.next()
+        report = self.gpsd.next()
         if report['class'] == 'TPV':
           time.sleep(0.1)
           print "Searching for GPS data..."
@@ -39,18 +38,18 @@ class Flight():
           self.lat = getattr(report,'lat',0.0)
           self.lon = getattr(report,'lon',0.0)
           self.speed =  getattr(report,'speed','nan')
-          if (countyBoi == 1 and lat != 0.0 and lon != 0.0):
+          if (countyBoi == 1 and self.lat != 0.0 and self.lon != 0.0):
             self.b[0] = self.lon
             self.b[1] = self.lat
-            print "Current longitude: ", lon
-            print "Current latitude: ", lat
+            print "Current longitude: ", self.lon
+            print "Current latitude: ", self.lat
             x = True
-          if (lat != 0.0 and lon != 0.0):
+          if (self.lat != 0.0 and self.lon != 0.0):
             self.a[0] = self.lon
             self.a[1] = self.lat
             countyBoi += 1
-            print "Reference longitude: ", lon
-            print "Reference latitude: ", lat
+            print "Reference longitude: ", self.lon
+            print "Reference latitude: ", self.lat
             time.sleep(60)
           
           """
@@ -97,14 +96,13 @@ class Flight():
       else:
         self.turn = "left"
     print "Preparing to turn " + self.turn
-  """
+  
   def getArc(self):
-    theta = 0.0
     x = ((self.b[0]-self.a[0])**2 + (self.b[1]-self.a[1])**2)**0.5
     print x
-    theta = math.acos((x**2-2(r_earth**2))/(-2(r_earth**2)))
+    self.theta = math.acos((x**2-2(r_earth**2))/(-2(r_earth**2)))
     print "Payload is {} feet from target position".format(theta*r_earth)
-  """
+  
 
 r_earth = 20902464.0
 p = Flight()
