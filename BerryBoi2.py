@@ -25,15 +25,50 @@ class Flight():
   #m9a, m9g, m9m = imu.getMotion9()
   
   def getData(self):
+    timeyBoi = 0
     countyBoi = 0
     x = False
     try:
       while (x == False):
         report = self.gpsd.next()
-        if report['class'] == 'TPV':
+        sys.stdout.write('\r'+"Loading 'TPV'")
+        time.sleep(0.1)
+        sys.stdout.flush()
+        sys.stdout.write('\r'+"Loading 'TPV'.")
+        time.sleep(0.1) 
+        sys.stdout.flush()
+        sys.stdout.write('\r'+"Loading 'TPV'..")
+        time.sleep(0.1)
+        sys.stdout.flush()
+        sys.stdout.write('\r'+"Loading 'TPV'...")
+        time.sleep(0.1)
+          
+        if report['class']== 'TPV':
           time.sleep(0.1)
-          print "Searching for GPS data..."
-
+          sys.stdout.write('\r'+"({}s) Searching for GPS data".format(timeyBoi))
+          time.sleep(0.1)
+          timeyBoi+=.1
+          sys.stdout.flush()
+          sys.stdout.write('\r'+"({}s) Searching for GPS data.".format(timeyBoi))
+          time.sleep(0.1)
+          timeyBoi+=.1
+          sys.stdout.flush()
+          sys.stdout.write('\r'+"({}s) Searching for GPS data..".format(timeyBoi))
+          time.sleep(0.1)
+          timeyBoi+=.1
+          sys.stdout.flush()
+          sys.stdout.write('\r'+"({}s) Searching for GPS data...".format(timeyBoi))
+          time.sleep(0.1)
+          timeyBoi+=.1
+          sys.stdout.flush()
+          sys.stdout.write('\r'+"({}s) Searching for GPS data..".format(timeyBoi))
+          time.sleep(0.1)
+          timeyBoi+=.1
+          sys.stdout.flush()
+          sys.stdout.write('\r'+"({}s) Searching for GPS data.".format(timeyBoi))
+          time.sleep(0.1)
+          timeyBoi+=.1
+          sys.stdout.flush()
           self.GPStime =  getattr(report,'time','')
           self.lat = getattr(report,'lat',0.0)
           self.lon = getattr(report,'lon',0.0)
@@ -43,13 +78,17 @@ class Flight():
             self.b[1] = self.lat
             print "Current longitude: ", self.lon
             print "Current latitude: ", self.lat
+            print "Speed: ", self.speed
+            print "Time: ", self.GPStime
             x = True
-          if (self.lat != 0.0 and self.lon != 0.0):
+          if (self.lat != 0.0 and self.lon != 0.0 and x == False):
             self.a[0] = self.lon
             self.a[1] = self.lat
             countyBoi += 1
             print "Reference longitude: ", self.lon
             print "Reference latitude: ", self.lat
+            print "Time: ", self.GPStime, "\n"
+            print "Waiting 60 seconds to collect more data...\n"
             time.sleep(60)
           
           """
@@ -59,10 +98,9 @@ class Flight():
           print  speed,"\t",
           print  sats,"\t"
           """ 
-          time.sleep(1)
+          #time.sleep(1)
     except (KeyboardInterrupt, SystemExit): #when you press ctrl+c
       print "Done.\nExiting."
-      f.close()
 
   def error(self):
     refTri = makeTri(self.a, self.b)
