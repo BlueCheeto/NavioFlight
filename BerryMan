@@ -1,1 +1,145 @@
+import math 
+import time
+import numpy as np
+import inspect
+from gps import *
 
+
+
+class BerryBoi():
+  gpsd = gps(mode=WATCH_ENABLE|WATCH_NEWSTYLE)
+  
+  lat = 0.0
+  lon = 0.0
+  turn = " "
+  speed = 0.0
+  error = 0.0
+  bearing = 0.0
+  GPStime = 0.0
+  target = [-122, 36.6]
+  angles = [0.0,0.0,0.0,0.0]
+  distances = [0.0,0.0,0.0,0.0] 
+  matr = np.array([[0.0,0.0],[0.0,0.0],[0.0,0.0],[0.0,0.0]])
+
+  #m9a, m9g, m9m = imu.getMotion9()
+  
+  def getData(self):
+    timeyBoi = 0
+    countyBoi = 0
+    x = False
+    try:
+      while (x == False):
+        report = self.gpsd.next()
+        sys.stdout.write('\r'+"Loading 'TPV'")
+        time.sleep(0.1)
+        sys.stdout.flush()
+        sys.stdout.write('\r'+"Loading 'TPV'.")
+        time.sleep(0.1) 
+        sys.stdout.flush()
+        sys.stdout.write('\r'+"Loading 'TPV'..")
+        time.sleep(0.1)
+        sys.stdout.flush()
+        sys.stdout.write('\r'+"Loading 'TPV'...")
+        time.sleep(0.1)
+          
+        if report['class']== 'TPV':
+          time.sleep(0.1)
+          sys.stdout.write('\r'+"({}s) Searching for GPS data".format(timeyBoi))
+          time.sleep(0.1)
+          timeyBoi+=.1
+          sys.stdout.flush()
+          sys.stdout.write('\r'+"({}s) Searching for GPS data.".format(timeyBoi))
+          time.sleep(0.1)
+          timeyBoi+=.1
+          sys.stdout.flush()
+          sys.stdout.write('\r'+"({}s) Searching for GPS data..".format(timeyBoi))
+          time.sleep(0.1)
+          timeyBoi+=.1
+          sys.stdout.flush()
+          sys.stdout.write('\r'+"({}s) Searching for GPS data...".format(timeyBoi))
+          time.sleep(0.1)
+          timeyBoi+=.1
+          sys.stdout.flush()
+          print "\n"
+          
+          self.GPStime = getattr(report,'time','')
+          self.lon = getattr(report,'lon',0.0)
+          self.lat = getattr(report,'lat',0.0)
+          self.speed = getattr(report,'speed','nan')
+          
+          if (self.lat != 0.0 and self.lon != 0.0):
+            self.matr[countyBoi, 0] = math.radians(self.lon)
+            self.matr[countyBoi, 1] = math.radians(self.lat)
+            countyBoi += 1
+            print "Reference longitude {}: ".format(countyBoi), self.lon
+            print "Reference latitude {}: ".format(countyBoi), self.lat
+            print "Time: ", self.GPStime
+            print "Speed: ", self.speed, "\n"
+            print "Waiting 15 seconds to collect more data...\n"
+            timeyBoi = 0.0
+            time.sleep(15)
+          if (countyBoi == 3 and self.lat != 0.0 and self.lon != 0.0):
+            self.matr[3, 0] = math.radians(self.lon)
+            self.matr[3, 1] = math.radians(self.lat)
+            print "Current longitude: ", self.lon
+            print "Current latitude: ", self.lat
+            print "Time: ", self.GPStime
+            print "Speed: ", self.speed
+            x = True
+    except (KeyboardInterrupt, SystemExit): #when you press ctrl+c
+      print "Done.\nExiting."
+
+  def getDistance(self):
+    r_earth = 6371
+    for i in range(4):
+      if (i < 3):
+        a = math.sin((self.matr[i+1,1] - self.matr[i,1])/2)**2 + math.cos(self.matr[i+1,1])*math.cos(self.matr[i,1])*math.sin((self.matr[i+1,0] - self.matr[i,0])/2)
+      else:
+        a = math.sin((self.target[1] - self.matr[i,1])/2)**2 + math.cos(self.target[1])*math.cos(self.matr[i,1])*math.sin((self.target[0] - self.matr[i,0])/2)
+      c = 2*math.atan2(math.sqrt(a), math.sqrt(1-a))
+      self.distances[i] = c * r_earth
+  
+  def getRelBearing(self):
+    for i in range(4):
+      if (i < 3):
+        x = math.cos(self.matr[i+1,1])*math.sin(self.matr[i+1,0]-self.matr[i,0])
+        y = math.cos(self.matr[i,1])*math.sin(self.matr[i+1,1]) - math.sin(self.matr[i,1])*math.cos(self.matr[i+1,1])*math.cos(self.matr[i+1,0] - self.matr[i,0])
+      else:
+        x = math.cos(self.target[1])*math.sin(self.target[0]-self.matr[i,0])
+        y = math.cos(self.matr[i,1])*math.sin(self.target[1]) - math.sin(self.matr[i,1])*math.cos(self.target[1])*math.cos(self.target[0] - self.matr[i,0])
+      self.angles[i] = math.atan2(x,y)
+
+  def whatUp(self):
+    print "Last recorded Reference Longitude: ", math.degrees(self.matr[2,0])
+    print "Last recorded Reference Latitude:  ", math.degrees(self.matr[2,1])
+    print "Last recorded Current Longitude: ", math.degrees(self.matr[3,0])
+    print "Last recorded Current Latitude:  ", math.degrees(self.matr[3,1]), "\n"
+    
+    print "Kilometers travelled between Reference and Current co-ordinates: ", self.distances[2]
+    print "Relative bearing between the two positions: ", self.angles[2], "\n"
+
+    print "Distances in km between current co-ordinates and target co-ordinates: ", self.distances[3]
+    print "Relative bearing between current and target: ", self.angles[3]
+
+    
+p = BerryBoi()
+i = 0
+
+while (i == 0):
+  choice = str(raw_input("Choose sum to run ya herrrd (getData, getDistance, getRelBearing, whatUp): "))
+  if (choice == "getData"):
+    p.getData()
+  elif (choice == "getDistance"):
+    p.getDistance()
+  elif (choice == "getRelBearing"):
+    p.getRelBearing()
+  elif (choice == "whatUp"):
+    p.whatUp()
+  else:
+    print "Unkown string submission dumbo"
+  
+  choice = str(raw_input("Wanna do sumthin else? (y/n) "))
+  if (choice == "y"):
+    i = 0
+  else:
+    i = 1
