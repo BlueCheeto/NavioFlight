@@ -2,9 +2,8 @@ import math
 import time
 import numpy as np
 import inspect
+import serial
 from gps import *
-
-
 
 class BerryBoi():
   gpsd = gps(mode=WATCH_ENABLE|WATCH_NEWSTYLE)
@@ -30,42 +29,17 @@ class BerryBoi():
     try:
       while (x == False):
         report = self.gpsd.next()
-        sys.stdout.write('\r'+"Loading 'TPV'")
-        time.sleep(0.1)
-        sys.stdout.flush()
-        sys.stdout.write('\r'+"Loading 'TPV'.")
-        time.sleep(0.1) 
-        sys.stdout.flush()
-        sys.stdout.write('\r'+"Loading 'TPV'..")
-        time.sleep(0.1)
-        sys.stdout.flush()
-        sys.stdout.write('\r'+"Loading 'TPV'...")
-        time.sleep(0.1)
-          
+        print"Loading 'TPV'"
+        
         if report['class']== 'TPV':
           time.sleep(0.1)
-          sys.stdout.write('\r'+"({}s) Searching for GPS data".format(timeyBoi))
-          time.sleep(0.1)
-          timeyBoi+=.1
-          sys.stdout.flush()
-          sys.stdout.write('\r'+"({}s) Searching for GPS data.".format(timeyBoi))
-          time.sleep(0.1)
-          timeyBoi+=.1
-          sys.stdout.flush()
-          sys.stdout.write('\r'+"({}s) Searching for GPS data..".format(timeyBoi))
-          time.sleep(0.1)
-          timeyBoi+=.1
-          sys.stdout.flush()
-          sys.stdout.write('\r'+"({}s) Searching for GPS data...".format(timeyBoi))
-          time.sleep(0.1)
-          timeyBoi+=.1
-          sys.stdout.flush()
-          print "\n"
+          print "Searching for GPS data \n"
           
-          self.GPStime = getattr(report,'time','')
-          self.lon = getattr(report,'lon',0.0)
-          self.lat = getattr(report,'lat',0.0)
-          self.speed = getattr(report,'speed','nan')
+          #gpsd.flushInput()
+          self.GPStime = getattr(self.gpsd.get_current(),'time','')
+          self.lon = getattr(self.gpsd.get_current(),'lon',0.0)
+          self.lat = getattr(self.gpsd.get_current(),'lat',0.0)
+          self.speed = getattr(self.gpsd.get_current(),'speed','nan')
           
           if (self.lat != 0.0 and self.lon != 0.0):
             self.matr[countyBoi, 0] = math.radians(self.lon)
@@ -76,11 +50,7 @@ class BerryBoi():
             print "Time: ", self.GPStime
             print "Speed: ", self.speed, "\n"
             print "Waiting 15 seconds to collect more data...\n"
-            timeyBoi = 0.0
-            j = 0
-            while (j == 0):
-              j = int(raw_input("Enter anything other than '0' to collect next coordinates")
-            #time.sleep(15)
+            time.sleep(15)
           if (countyBoi == 3 and self.lat != 0.0 and self.lon != 0.0):
             self.matr[3, 0] = math.radians(self.lon)
             self.matr[3, 1] = math.radians(self.lat)
@@ -123,8 +93,7 @@ class BerryBoi():
 
     print "Distances in km between current co-ordinates and target co-ordinates: ", self.distances[3]
     print "Relative bearing between current and target: ", self.angles[3]
-
-    
+        
 p = BerryBoi()
 i = 0
 
