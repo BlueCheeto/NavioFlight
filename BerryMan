@@ -77,7 +77,10 @@ class BerryBoi():
             print "Speed: ", self.speed, "\n"
             print "Waiting 15 seconds to collect more data...\n"
             timeyBoi = 0.0
-            time.sleep(15)
+            j = 0
+            while (j == 0):
+              j = int(raw_input("Enter anything other than '0' to collect next coordinates")
+            #time.sleep(15)
           if (countyBoi == 3 and self.lat != 0.0 and self.lon != 0.0):
             self.matr[3, 0] = math.radians(self.lon)
             self.matr[3, 1] = math.radians(self.lat)
