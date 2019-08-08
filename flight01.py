@@ -137,9 +137,11 @@ class BerryBoi():
       angle += m9g[2]/2
       if (time.time()-timer > 5):
         if (abs(angle) < 30):
-          return False
-        else:
+          print angle
           return True
+        else:
+          print angle
+          return False
       time.sleep(0.25)
       
   def getChange(self): #Measures angular change over time for trajectory correction
@@ -219,8 +221,11 @@ try:
     p.getRelBearing()
     p.whatUp()
     p.getTurn()
-    p.getTurb()
-    #adjust payload by 'p.error' degrees and in direction 'p.turn' with servos at this point
-    p.getChange() #Monitor turn rate and terminate when turn is completed
+    if (p.getTurb()):
+      #adjust payload by 'p.error' degrees and in direction 'p.turn' with servos at this point
+      p.getChange() #Monitor turn rate and terminate when turn is completed
+    else:
+      #choiceThatDoesntMatter = raw_input -> in the future have ground station specify a wait time until resuming navigation and checking for turbulence again
+      print "Turbulence is preventing the payload from accurately navigating"
 except (KeyboardInterrupt, SystemExit): #when you press ctrl+c
     print "Main loop terminated.\nBye!"
